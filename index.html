@@ -9,7 +9,9 @@
 .nav{position:sticky;top:0;z-index:5;background:#17324d;color:#fff;display:flex;align-items:center;gap:10px;padding:calc(10px + env(safe-area-inset-top)) 14px 12px;min-height:52px}
 .nav .bk{font-size:17px;font-weight:700;color:#9fd3ff;background:none;border:none;padding:6px 4px;cursor:pointer;min-width:84px;text-align:left}
 .nav .t{font-size:18px;font-weight:800;flex:1;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.nav .sp{min-width:84px}.nav.long .t{font-size:15px;text-align:right}.nav.long .sp{min-width:0}
+.nav .hm{background:#fff;color:#17324d;border:none;border-radius:999px;font-weight:900;font-size:14px;padding:6px 12px;cursor:pointer;font-family:inherit;white-space:nowrap}.nav .hm.off{visibility:hidden}.nav.long .t{font-size:15px;text-align:right}
+.shr{display:block;width:100%;text-align:center;background:#0b4fa0;color:#fff;font-weight:900;font-size:16px;border:none;border-radius:12px;padding:12px;margin:0 0 12px;cursor:pointer;font-family:inherit;box-shadow:0 1px 4px rgba(0,0,0,.18)}
+.card .shr{margin:14px 0 0}
 .body{padding:14px;max-width:560px;margin:0 auto;padding-bottom:calc(30px + env(safe-area-inset-bottom))}
 label{display:block;font-weight:800;font-size:14px;margin:12px 0 5px;color:#17324d}
 input,select{width:100%;height:48px;border:2px solid #9aa8b6;border-radius:10px;background:#fff;font-size:17px;padding:0 12px;color:#111;font-family:inherit;-webkit-appearance:none;appearance:none}
@@ -70,7 +72,7 @@ html{background:#fff url(bg.jpg) repeat;background-size:250px auto}body{backgrou
 </style></head>
 <body>
 <div class="brand"><img src="icon-192.png" alt=""><div><div class="bn">Latoison Law</div><a href="tel:6109991439">610-999-1439</a></div></div>
-<div class="nav"><button class="bk" id="back" type="button"></button><span class="t" id="title">Latoison Law</span><span class="sp"></span></div>
+<div class="nav"><button class="bk" id="back" type="button"></button><span class="t" id="title">Latoison Law</span><button class="hm" id="homeBtn" type="button">⌂ HOME</button></div>
 <div class="body" id="main"></div>
 <script src="courts.js"></script>
 <script>
@@ -84,7 +86,7 @@ function call(fn,arg){return new Promise((ok,no)=>{if(false){google.script.run.w
  else{const q=new URLSearchParams(Object.assign({api:fn==='llSearch'?'search':'card'},arg));fetch((window.LL_API||'')+'?'+q,{credentials:'omit'}).then(r=>r.json()).then(ok,no)}})}
 function stCls(s){return /^active/i.test(s)?'':/^inactive/i.test(s)?'i':/^adjud/i.test(s)?'a':'c'}
 function day(us){const m=String(us||'').match(/(\d{2})\/(\d{2})\/(\d{4})/);if(!m)return '';return ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][new Date(+m[3],m[1]-1,+m[2]).getDay()]}
-function go(view,push){S.view=view;S.error='';if(push!==false){try{history.pushState({v:view},'');S.depth=(S.depth||0)+1}catch(e){}}render();window.scrollTo(0,0)}
+function go(view,push){S.view=view;S.error='';S.sharePanel='';if(push!==false){try{history.pushState({v:view},'');S.depth=(S.depth||0)+1}catch(e){}}render();window.scrollTo(0,0)}
 window.addEventListener('popstate',e=>{S.depth=Math.max(0,(S.depth||0)-1);const v=e.state&&e.state.v||'search';S.view=v==='card'&&!S.card?(S.results?'results':'search'):v;render()});
 
 function lastNm(n){const t=String(n||'').replace(/[.,]/g,' ').split(/\s+/).filter(x=>x&&!/^(jr|sr|ii|iii|iv)$/i.test(x));return t.length?t[t.length-1]:''}
@@ -101,7 +103,7 @@ function render(){const back=document.getElementById('back'),title=document.getE
  main.classList.toggle('srch',S.view==='search');if(S.view==='search'){back.textContent='';title.textContent='Latoison Law';main.innerHTML=searchHtml()}
  else if(S.view==='results'){back.textContent='‹ Search';title.textContent=S.busy?'Searching…':(S.results?S.results.count+' docket'+(S.results.count===1?'':'s'):'');main.innerHTML=resultsHtml()}
  else{back.textContent='‹ Results';title.textContent=S.cardFor?S.cardFor.dn:'';main.innerHTML=cardHtml()}
- document.querySelector('.nav').classList.toggle('long',S.view==='card');document.querySelector('.nav').style.display=S.view==='search'?'none':'';
+ document.querySelector('.nav').classList.toggle('long',S.view==='card');document.getElementById('homeBtn').classList.toggle('off',S.view==='search');document.querySelector('.nav').style.display=S.view==='search'?'none':'';
  wire()}
 function opt(v,t,sel){return '<option value="'+esc(v)+'"'+(v===sel?' selected':'')+'>'+esc(t)+'</option>'}
 function searchHtml(){const f=S.form;return ''+
@@ -120,7 +122,7 @@ function searchHtml(){const f=S.form;return ''+
 function resultsHtml(){if(S.busy)return '<div class="wait"><div class="spin"></div>Searching the court records…<br><span style="font-weight:600">This can take 10–30 seconds.</span></div>';
  if(S.error)return '<div class="err">'+esc(S.error)+'</div>';const r=S.results;if(!r)return '';
  if(!r.count)return '<div class="err">No dockets found for '+esc(r.searched.first+' '+r.searched.last)+'. Check the spelling, or try fewer letters, a different case type, or Any county.</div>';
- let h='';if(r.more_pages)h+='<div class="err">The court site has more results than it shows'+(r.with_dob?'':' — add the date of birth')+' or pick a county to narrow it.</div>';
+ let h='<button class="shr" type="button" data-share="results">SHARE THESE RESULTS</button>'+(S.sharePanel==='results'?sharePanelHtml(resultsShareText()):'');if(r.more_pages)h+='<div class="err">The court site has more results than it shows'+(r.with_dob?'':' — add the date of birth')+' or pick a county to narrow it.</div>';
  r.people.forEach((p,pi)=>{h+='<div class="who">'+esc(p.name)+(p.dob?' — '+esc(p.dob):'')+(p.match?'<span class="m">DOB MATCH</span>':'')+'</div>';
   p.dockets.forEach((d,di)=>{const c=stCls(d.status);h+='<button class="res '+c+'" type="button" data-open="'+pi+':'+di+'"><div class="rt"><span class="dn">'+esc(d.dn)+'</span><span class="st '+c+'">'+esc(d.status||'—')+'</span></div>'+
    '<div class="rs"><span class="ct">'+esc(d.court)+'</span> '+esc(d.county)+(d.filed?' · filed '+esc(d.filed):'')+(d.next?' · <span class="nx">Next '+esc((String(d.next).match(/\d{1,2}\/\d{1,2}\/\d{4}/)||[d.next])[0])+'</span>':'')+(d.moved_to?'<br>Moved up to '+esc(d.moved_to):'')+'</div></button>'})});
@@ -130,16 +132,16 @@ function cardHtml(){const d=S.cardFor;if(S.busy)return '<div class="wait"><div c
  const c=S.card;if(!c)return '';const n=c.next,cust=c.custody;
  let h='<div class="card"><div class="nm">'+esc(c.name||d.name)+'</div><div class="dob">'+(c.dob?'DOB '+esc(c.dob):'')+'</div>';
  h+=n?'<div class="next">NEXT: '+esc(n.type)+'<br>'+esc(day(n.date))+' '+esc(n.date)+' · '+esc(n.time)+(n.judge?' · Judge '+esc(lastNm(n.judge)):'')+addrHtml(llPlace(c,n))+'</div>':'<div class="nonext">No court date scheduled</div>';
- if(cust&&cust.in)h+='<div class="cust">IN CUSTODY'+(cust.location?' — '+esc(cust.location):'')+(cust.since?' (since '+esc(cust.since)+')':'')+'</div>';
+ if(cust&&cust.in)h+='<div class="cust">IN CUSTODY'+(cust.location?' — '+esc(cust.location):'')+(cust.since?' (since '+esc(cust.since)+')':'')+(c.bail_now?'<br>BAIL: '+esc(c.bail_now):'')+'</div>';
  const kv=[];kv.push('<b>'+esc(c.court)+'</b> · '+esc(c.county)+' · <b>'+esc((c.status||'').toUpperCase())+'</b>');
  if(c.judge)kv.push('<b>Judge:</b> '+esc(c.judge));
  if(c.orig)kv.push('<b>Origination:</b> '+(c.orig.authority?'Judge '+esc(c.orig.authority):'')+(c.orig.docket?'<br>'+esc(c.orig.docket):''));
  if(d&&d.moved_to)kv.push('<b>Moved up to:</b> '+esc(d.moved_to));
- if(c.agency)kv.push('<b>Arresting agency:</b> '+esc(c.agency));
+ if(c.officer||c.agency)kv.push('<b>Arresting officer:</b> '+(c.officer?esc(c.officer):'None listed')+(c.agency?' — '+esc(c.agency):''));
  if(c.processing)kv.push('<b>Stage:</b> '+esc(c.processing));
  if(c.bail_now)kv.push('<b>Bail:</b> '+esc(c.bail_now));
  if(!(cust&&cust.in))kv.push('<b>Custody:</b> Not in custody'+(cust&&cust.released?' (released '+esc(cust.released)+')':cust?'':' (no confinement listed)'));
- h+='<div class="kv">'+kv.join('<br>')+'</div></div>';
+ h+='<div class="kv">'+kv.join('<br>')+'</div><button class="shr" type="button" data-share="card">SHARE THIS DOCKET</button>'+(S.sharePanel==='card'?sharePanelHtml(cardShareText()):'')+'</div>';
  h+='<div class="sec open">Charges ('+c.charges.length+')</div><div class="secb">'+chargesHtml(c)+'</div>';
  h+=sec('ev','Court dates ('+c.events.length+')',eventsHtml(c));
  if(c.bail.length)h+=sec('bl','Bail history ('+c.bail.length+')',c.bail.map(b=>'<div class="ev"><span class="w">'+esc(b.date)+'</span><span><b>'+esc(b.action)+'</b> '+esc([b.type,b.pct,b.amount].filter(Boolean).join(' · '))+'</span></div>').join(''));
@@ -147,6 +149,22 @@ function cardHtml(){const d=S.cardFor;if(S.busy)return '<div class="wait"><div c
  h+='<a class="pdf" href="'+esc(c.url)+'" target="_blank" rel="noopener">OPEN THE FULL DOCKET (PDF)</a>';
  if(!c.read_ok)h+='<div class="err">Part of this docket could not be read. Open the full docket for the details.</div>';
  return h}
+function sharePanelHtml(t){const e=encodeURIComponent(t);return '<div class="shbox" style="border-top:2px solid #17324d;border-radius:12px;margin:0 0 12px"><a href="sms:?&body='+e+'" target="_top">TEXT IT</a><a class="em" href="mailto:?subject='+encodeURIComponent('Docket information')+'&body='+e+'" target="_top">EMAIL IT</a><div class="t">Or copy this message:</div><textarea readonly>'+esc(t)+'</textarea></div>'}
+function appLink(){return LL.appUrl||location.href}
+function resultsShareText(){const r=S.results||{},F=r.searched||{};let t='Docket search — '+(F.first||'')+' '+(F.last||'')+'\n';
+ (r.people||[]).forEach(p=>{t+='\n'+p.name+(p.dob?' — DOB '+p.dob:'')+'\n';p.dockets.forEach((d,i)=>{const nx=d.next?(String(d.next).match(/\d{1,2}\/\d{1,2}\/\d{4}/)||[d.next])[0]:'';t+=(i+1)+'. '+d.dn+' · '+(d.court==='CCP'?'Common Pleas':d.court==='MC'?'Municipal Court':'District Court')+' · '+d.county+' · '+String(d.status||'').toUpperCase()+(nx?' · next '+nx:'')+'\n'})});
+ return t+'\nLatoison Law app: '+appLink()}
+function cardShareText(){const c=S.card,d=S.cardFor||{};if(!c)return '';const n=c.next,cu=c.custody,L=[];
+ L.push((c.name||d.name||'')+(c.dob?' — DOB '+c.dob:''));L.push(c.dn+' · '+(c.court==='CCP'?'Common Pleas':c.court==='MC'?'Municipal Court':'District Court')+' · '+c.county+' · '+String(c.status||'').toUpperCase());
+ if(n){const p=llPlace(c,n);L.push('NEXT: '+n.type+' — '+day(n.date)+' '+n.date+' '+n.time+(n.judge?' — Judge '+lastNm(n.judge):''));if(p)L.push('Where: '+[p.name,p.street,p.city].filter(Boolean).join(', '))}else L.push('No court date scheduled');
+ L.push(cu&&cu.in?'IN CUSTODY'+(cu.location?' — '+cu.location:'')+(cu.since?' (since '+cu.since+')':''):'Not in custody'+(cu&&cu.released?' (released '+cu.released+')':''));
+ if(c.bail_now)L.push('Bail: '+c.bail_now);if(c.judge)L.push('Judge: '+c.judge);if(c.officer||c.agency)L.push('Arresting officer: '+(c.officer||'None listed')+(c.agency?' — '+c.agency:''));
+ if(c.charges.length){L.push('Charges:');c.charges.slice(0,4).forEach((x,i)=>L.push((i+1)+'. '+(x.grade?x.grade+' ':'')+x.desc+(x.disp?' — '+x.disp:'')));if(c.charges.length>4)L.push('(+'+(c.charges.length-4)+' more)')}
+ L.push('Full docket: '+(c.url||d.url||''));return L.join('\n')}
+function doShare(kind){const t=kind==='card'?cardShareText():resultsShareText();
+ // text only (no title): a title becomes an MMS subject on Android group texts and the message arrived blank
+ if(navigator.share){navigator.share({text:t}).catch(e=>{if(e&&e.name==='AbortError')return;S.sharePanel=kind;render()});return}
+ S.sharePanel=S.sharePanel===kind?'':kind;render()}
 function shareText(){const u=LL.appUrl||location.href;return 'Latoison Law — free Pennsylvania court docket search on your phone.\nOpen it: '+u+'\n\nTo put it on your home screen:\n• Android users: open the link in Chrome, tap ⋮ (top right), then tap "Install app".\n• iPhone users: open the link in Safari, tap the Share button (square with an arrow), then tap "Add to Home Screen".'}
 function shareHtml(){const t=shareText(),e=encodeURIComponent(t);return '<div class="shbox"><a href="sms:?&body='+e+'" target="_top">TEXT IT</a><a class="em" href="mailto:?subject='+encodeURIComponent('Latoison Law docket app')+'&body='+e+'" target="_top">EMAIL IT</a><div class="t">Or copy this message:</div><textarea readonly id="shareTxt">'+esc(t)+'</textarea></div>'}
 function sec(k,t,body){const o=!!S.open[k];return '<button class="sec'+(o?' open':'')+'" type="button" data-sec="'+k+'">'+t+' <span>'+(o?'▾':'▸')+'</span></button>'+(o?'<div class="secb">'+body+'</div>':'')}
@@ -170,10 +188,12 @@ function wire(){const f=document.getElementById('sf');
   S.cardFor=d;S.card=null;S.open={};S.busy=true;go('card');
   call('llCard',{dev:dev(),dn:d.dn,url:d.url,county:d.county,status:d.status,name:d.name,dob:d.dob,filed:d.filed}).then(r=>{if(S.cardFor!==d)return;S.busy=false;if(r&&r.error)S.error=r.error;else S.card=r.card;render()},e=>{S.busy=false;S.error=msg(e);render()})});
  const cb=document.getElementById('clearBtn');if(cb)cb.onclick=()=>{S.form={last:'',first:'',dob:'',county:'',status:'Active',type:''};S.results=null;S.card=null;S.cardFor=null;S.error='';S.shareOpen=false;render();const l=document.getElementById('last');if(l)l.focus()};
- const sb=document.getElementById('shareBtn');if(sb)sb.onclick=()=>{const t=shareText();if(navigator.share){navigator.share({title:'Latoison Law',text:t}).catch(()=>{S.shareOpen=true;render()});return}S.shareOpen=!S.shareOpen;render()};
+ document.querySelectorAll('[data-share]').forEach(b=>b.onclick=()=>doShare(b.getAttribute('data-share')));
+ const sb=document.getElementById('shareBtn');if(sb)sb.onclick=()=>{const t=shareText();if(navigator.share){navigator.share({text:t}).catch(e=>{if(e&&e.name==='AbortError')return;S.shareOpen=true;render()});return}S.shareOpen=!S.shareOpen;render()};
  document.querySelectorAll('[data-sec]').forEach(b=>b.onclick=()=>{const k=b.getAttribute('data-sec');S.open[k]=!S.open[k];render()});
  const dob=document.getElementById('dob');if(dob)dob.oninput=()=>{let v=dob.value.replace(/[^\d]/g,'').slice(0,8);if(v.length>4)v=v.slice(0,2)+'/'+v.slice(2,4)+'/'+v.slice(4);else if(v.length>2)v=v.slice(0,2)+'/'+v.slice(2);dob.value=v}}
 function msg(e){return String(e&&e.message||e||'Something went wrong. Please try again.').replace(/^Exception:\s*/,'')}
+document.getElementById('homeBtn').onclick=()=>{if(S.view!=='search'){S.sharePanel='';go('search')}};
 document.getElementById('back').onclick=()=>{if(S.view==='search')return;if(S.depth>0){try{history.back();return}catch(e){}}go(S.view==='card'?'results':'search',false)};
 try{history.replaceState({v:'search'},'')}catch(e){}
 render();
