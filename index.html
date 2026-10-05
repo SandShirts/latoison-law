@@ -48,11 +48,18 @@ input:focus,select:focus{outline:none;border-color:#17324d}
 .pdf{display:block;text-align:center;border:2px solid #17324d;color:#17324d;font-weight:900;border-radius:10px;padding:12px;margin-top:12px;font-size:16px;text-decoration:none;background:#fff}
 .note{font-size:12px;color:#333;text-align:center;margin-top:14px;line-height:1.4}
 .hide{display:none}
+.brand{display:flex;align-items:center;gap:12px;background:#17324d;color:#fff;padding:calc(10px + env(safe-area-inset-top)) 16px 10px}
+.brand img{width:54px;height:54px;border-radius:12px;background:#fff;flex:none}.brand .bn{font-size:25px;font-weight:900;letter-spacing:.3px;line-height:1.1}
+.brand a{display:inline-block;color:#9fd3ff;font-weight:800;font-size:18px;text-decoration:none;margin-top:2px}
+.ad{margin-top:6px}.ad summary{display:inline-block;font-weight:900;font-size:14px;color:#0b4fa0;background:#fff;border:2px solid #0b4fa0;border-radius:8px;padding:4px 10px;cursor:pointer;list-style:none}
+.ad summary::-webkit-details-marker{display:none}.ad[open] summary{background:#0b4fa0;color:#fff}
+.ad a{display:block;margin-top:6px;background:#fff;border:2px solid #9aa8b6;border-radius:10px;padding:8px 10px;color:#111;font-weight:700;font-size:15px;text-decoration:none;line-height:1.35}
+.ad a .go{display:block;color:#0b4fa0;font-weight:900;margin-top:4px}
 html{background:#fff url(bg.jpg) repeat;background-size:250px auto}body{background:transparent!important}
 #sf{background:#fff;border-radius:14px;padding:2px 14px 14px;box-shadow:0 1px 4px rgba(0,0,0,.18)}
 .note,.who,.wait{background:#fff;border-radius:10px;padding:8px 10px}.note{margin-top:12px}.who{display:block;box-shadow:0 1px 3px rgba(0,0,0,.12)}
 .res,.card,.share{box-shadow:0 1px 4px rgba(0,0,0,.18)}
-.body.srch{display:flex;flex-direction:column;min-height:calc(100vh - 52px - env(safe-area-inset-top))}.shwrap{margin-top:auto;padding-top:22px}.shwrap .share{margin-top:0}
+.body.srch{display:flex;flex-direction:column;min-height:calc(100vh - 80px - env(safe-area-inset-top))}.shwrap{margin-top:auto;padding-top:22px}.shwrap .share{margin-top:0}
 .share{display:block;width:100%;text-align:center;background:#fff;color:#17324d;font-weight:900;font-size:17px;border:2px solid #17324d;border-radius:12px;padding:13px;margin-top:22px;cursor:pointer;font-family:inherit}
 .shbox{background:#fff;border:2px solid #17324d;border-top:none;border-radius:0 0 12px 12px;margin-top:-4px;padding:12px}
 .shbox a{display:block;text-align:center;background:#17734a;color:#fff;font-weight:900;font-size:16px;border-radius:10px;padding:12px;margin-bottom:10px;text-decoration:none}
@@ -61,13 +68,15 @@ html{background:#fff url(bg.jpg) repeat;background-size:250px auto}body{backgrou
 .ch .sn{font-size:12.5px;font-weight:800;color:#111;margin-top:2px}.ch .cn{font-size:12px;color:#333}
 </style></head>
 <body>
+<div class="brand"><img src="icon-192.png" alt=""><div><div class="bn">Latoison Law</div><a href="tel:6109991439">610-999-1439</a></div></div>
 <div class="nav"><button class="bk" id="back" type="button"></button><span class="t" id="title">Latoison Law</span><span class="sp"></span></div>
 <div class="body" id="main"></div>
+<script src="courts.js"></script>
 <script>
 window.LL_API="https://script.google.com/macros/s/AKfycbxs4tI_oF_y-hUfI_Cs2_zyAW_7k4gIzLl6XvLXfVVkO-OjvYnhUxCUqERVdTXwHtB2/exec";
 const LL={build:'LL App Draft 3 (web)',counties:["Adams", "Allegheny", "Armstrong", "Beaver", "Bedford", "Berks", "Blair", "Bradford", "Bucks", "Butler", "Cambria", "Cameron", "Carbon", "Centre", "Chester", "Clarion", "Clearfield", "Clinton", "Columbia", "Crawford", "Cumberland", "Dauphin", "Delaware", "Elk", "Erie", "Fayette", "Forest", "Franklin", "Fulton", "Greene", "Huntingdon", "Indiana", "Jefferson", "Juniata", "Lackawanna", "Lancaster", "Lawrence", "Lebanon", "Lehigh", "Luzerne", "Lycoming", "McKean", "Mercer", "Mifflin", "Monroe", "Montgomery", "Montour", "Northampton", "Northumberland", "Perry", "Philadelphia", "Pike", "Potter", "Schuylkill", "Snyder", "Somerset", "Sullivan", "Susquehanna", "Tioga", "Union", "Venango", "Warren", "Washington", "Wayne", "Westmoreland", "Wyoming", "York"],appUrl:location.origin+location.pathname};
 ['build','counties','appUrl'].forEach(k=>{if(typeof LL[k]==='string'&&/^[\["]/.test(LL[k]))try{LL[k]=JSON.parse(LL[k])}catch(e){}});if(!Array.isArray(LL.counties))LL.counties=[];
-const S={view:'search',form:{last:'',first:'',dob:'',county:'',status:'',type:'criminal'},results:null,card:null,cardFor:null,open:{},busy:false,error:''};
+const S={view:'search',form:{last:'',first:'',dob:'',county:'',status:'Active',type:'criminal'},results:null,card:null,cardFor:null,open:{},busy:false,error:''};
 function dev(){try{let d=localStorage.getItem('llDev');if(!d){d=Math.random().toString(36).slice(2)+Date.now().toString(36);localStorage.setItem('llDev',d)}return d}catch(e){return 'nostore'}}
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c])}
 function call(fn,arg){return new Promise((ok,no)=>{if(false){google.script.run.withSuccessHandler(ok).withFailureHandler(e=>no(e))[fn](arg)}
@@ -77,11 +86,21 @@ function day(us){const m=String(us||'').match(/(\d{2})\/(\d{2})\/(\d{4})/);if(!m
 function go(view,push){S.view=view;S.error='';if(push!==false){try{history.pushState({v:view},'');S.depth=(S.depth||0)+1}catch(e){}}render();window.scrollTo(0,0)}
 window.addEventListener('popstate',e=>{S.depth=Math.max(0,(S.depth||0)-1);const v=e.state&&e.state.v||'search';S.view=v==='card'&&!S.card?(S.results?'results':'search'):v;render()});
 
+function lastNm(n){const t=String(n||'').replace(/[.,]/g,' ').split(/\s+/).filter(x=>x&&!/^(jr|sr|ii|iii|iv)$/i.test(x));return t.length?t[t.length-1]:''}
+function llPlace(c,e){const dn=String(c.dn||''),t=String((e&&e.type)||''),cp=LL_CP[c.county],P=a=>({name:a[0],street:a[1],city:a[2]+', PA '+a[3]});
+ if(/^MC-/.test(dn))return P(LL_CP.Philadelphia);if(/^CP-/.test(dn))return cp?P(cp):null;
+ const m=dn.match(/^MJ-(\d{2})(\d)(\d{2})/);if(!m)return null;
+ if(cp&&/formal arraignment|common pleas|pre-?trial|call of the list|^trial/i.test(t))return P(cp);
+ let code=m[1]+'-'+m[2]+'-'+m[3];const jl=lastNm(e&&e.judge).toLowerCase();
+ if(jl.length>2){const hit=Object.keys(LL_MDJ).find(k=>k.slice(0,2)===m[1]&&lastNm(LL_MDJ[k][0]).toLowerCase()===jl);if(hit)code=hit}
+ const r=LL_MDJ[code]||['','','',''];return {name:'District Court '+code,street:r[1],city:r[2]?r[2]+', PA '+r[3]:(c.county?c.county+' County':''),code:code}}
+function addrHtml(p){if(!p)return '';const q=[p.code?'Magisterial District Court '+p.code:p.name,p.street,p.city].filter(Boolean).join(', ')+(p.street||/PA/.test(p.city)?'':', PA');
+ return '<details class="ad"><summary>&#128205; Address &#9662;</summary><a href="https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(q)+'" target="_blank" rel="noopener">'+esc(p.name)+(p.street?'<br>'+esc(p.street):'')+(p.city?'<br>'+esc(p.city):'')+'<span class="go">Open in Maps &#8250;</span></a></details>'}
 function render(){const back=document.getElementById('back'),title=document.getElementById('title'),main=document.getElementById('main');
  main.classList.toggle('srch',S.view==='search');if(S.view==='search'){back.textContent='';title.textContent='Latoison Law';main.innerHTML=searchHtml()}
  else if(S.view==='results'){back.textContent='‹ Search';title.textContent=S.busy?'Searching…':(S.results?S.results.count+' docket'+(S.results.count===1?'':'s'):'');main.innerHTML=resultsHtml()}
  else{back.textContent='‹ Results';title.textContent=S.cardFor?S.cardFor.dn:'';main.innerHTML=cardHtml()}
- document.querySelector('.nav').classList.toggle('long',S.view==='card');
+ document.querySelector('.nav').classList.toggle('long',S.view==='card');document.querySelector('.nav').style.display=S.view==='search'?'none':'';
  wire()}
 function opt(v,t,sel){return '<option value="'+esc(v)+'"'+(v===sel?' selected':'')+'>'+esc(t)+'</option>'}
 function searchHtml(){const f=S.form;return ''+
@@ -108,7 +127,7 @@ function cardHtml(){const d=S.cardFor;if(S.busy)return '<div class="wait"><div c
  if(S.error)return '<div class="err">'+esc(S.error)+'</div>'+(d&&d.url?'<a class="pdf" href="'+esc(d.url)+'" target="_blank" rel="noopener">OPEN THE FULL DOCKET (PDF)</a>':'');
  const c=S.card;if(!c)return '';const n=c.next,cust=c.custody;
  let h='<div class="card"><div class="nm">'+esc(c.name||d.name)+'</div><div class="dob">'+(c.dob?'DOB '+esc(c.dob):'')+'</div>';
- h+=n?'<div class="next">NEXT: '+esc(n.type)+'<br>'+esc(day(n.date))+' '+esc(n.date)+' · '+esc(n.time)+(n.judge?' · Judge '+esc(n.judge.split(' ').slice(-1)[0]):'')+'</div>':'<div class="nonext">No court date scheduled</div>';
+ h+=n?'<div class="next">NEXT: '+esc(n.type)+'<br>'+esc(day(n.date))+' '+esc(n.date)+' · '+esc(n.time)+(n.judge?' · Judge '+esc(lastNm(n.judge)):'')+addrHtml(llPlace(c,n))+'</div>':'<div class="nonext">No court date scheduled</div>';
  if(cust&&cust.in)h+='<div class="cust">IN CUSTODY'+(cust.location?' — '+esc(cust.location):'')+(cust.since?' (since '+esc(cust.since)+')':'')+'</div>';
  const kv=[];kv.push('<b>'+esc(c.court)+'</b> · '+esc(c.county)+' · <b>'+esc((c.status||'').toUpperCase())+'</b>');
  if(c.judge)kv.push('<b>Judge:</b> '+esc(c.judge));
@@ -134,7 +153,7 @@ function chargesHtml(c){if(!c.charges.length)return '<div class="ch">No current 
  if(c.charges.length>4)h+='<button class="more" type="button" data-sec="chAll">'+(all?'Show fewer ▴':'Show all '+c.charges.length+' ▾')+'</button>';
  if(c.dropped)h+='<div class="ch d" style="color:#555">'+c.dropped+' replaced / withdrawn / dismissed charge'+(c.dropped===1?'':'s')+' not shown.</div>';return h}
 function eventsHtml(c){if(!c.events.length)return '<div class="ch">No court dates listed.</div>';const nx=c.next;
- return c.events.slice().reverse().map(e=>{const isNx=nx&&e.date===nx.date&&e.type===nx.type,past=!isNx&&e.iso<(nx?nx.iso:'9');return '<div class="ev'+(isNx?' nx':past?' past':'')+'"><span class="w">'+esc(e.date)+'<br><span class="es">'+esc(e.time)+'</span></span><span>'+esc(e.type)+(e.judge?' · '+esc(e.judge):'')+'<br><span class="es">'+esc(e.status)+'</span></span></div>'}).join('')}
+ return c.events.slice().reverse().map(e=>{const isNx=nx&&e.date===nx.date&&e.type===nx.type,past=!isNx&&e.iso<(nx?nx.iso:'9');return '<div class="ev'+(isNx?' nx':past?' past':'')+'"><span class="w">'+esc(e.date)+'<br><span class="es">'+esc(e.time)+'</span></span><span>'+esc(e.type)+(e.judge?' · '+esc(e.judge):'')+'<br><span class="es">'+esc(e.status)+'</span>'+addrHtml(llPlace(c,e))+'</span></div>'}).join('')}
 function peopleHtml(c){let h='<div class="pt"><div class="r">Defense attorney</div>'+(c.defense.length?c.defense.map(a=>esc(a.name)+(a.kind?' ('+esc(a.kind.toLowerCase())+')':'')+(a.phone?'<br><a href="tel:'+esc(a.phone.replace(/\D/g,''))+'">'+esc(a.phone)+'</a>':'')).join('<br>'):'None listed')+'</div>';
  h+='<div class="pt"><div class="r">Commonwealth</div>'+(c.commonwealth.length?c.commonwealth.map(n=>'ADA '+esc(n)).join(' · '):'None listed')+'</div>';
  h+='<div class="pt"><div class="r">Arresting officer</div>'+(c.officer?esc(c.officer):'None listed')+(c.agency?' — '+esc(c.agency):'')+'</div>';return h}
