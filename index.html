@@ -48,6 +48,7 @@ input:focus,select:focus{outline:none;border-color:#17324d}
 .pdf{display:block;text-align:center;border:2px solid #17324d;color:#17324d;font-weight:900;border-radius:10px;padding:12px;margin-top:12px;font-size:16px;text-decoration:none;background:#fff}
 .note{font-size:12px;color:#333;text-align:center;margin-top:14px;line-height:1.4}
 .hide{display:none}
+.body.srch{display:flex;flex-direction:column;min-height:calc(100vh - 52px - env(safe-area-inset-top))}.shwrap{margin-top:auto;padding-top:22px}.shwrap .share{margin-top:0}
 .share{display:block;width:100%;text-align:center;background:#fff;color:#17324d;font-weight:900;font-size:17px;border:2px solid #17324d;border-radius:12px;padding:13px;margin-top:22px;cursor:pointer;font-family:inherit}
 .shbox{background:#fff;border:2px solid #17324d;border-top:none;border-radius:0 0 12px 12px;margin-top:-4px;padding:12px}
 .shbox a{display:block;text-align:center;background:#17734a;color:#fff;font-weight:900;font-size:16px;border-radius:10px;padding:12px;margin-bottom:10px;text-decoration:none}
@@ -73,7 +74,7 @@ function go(view,push){S.view=view;S.error='';if(push!==false){try{history.pushS
 window.addEventListener('popstate',e=>{S.depth=Math.max(0,(S.depth||0)-1);const v=e.state&&e.state.v||'search';S.view=v==='card'&&!S.card?(S.results?'results':'search'):v;render()});
 
 function render(){const back=document.getElementById('back'),title=document.getElementById('title'),main=document.getElementById('main');
- if(S.view==='search'){back.textContent='';title.textContent='Latoison Law';main.innerHTML=searchHtml()}
+ main.classList.toggle('srch',S.view==='search');if(S.view==='search'){back.textContent='';title.textContent='Latoison Law';main.innerHTML=searchHtml()}
  else if(S.view==='results'){back.textContent='‹ Search';title.textContent=S.busy?'Searching…':(S.results?S.results.count+' docket'+(S.results.count===1?'':'s'):'');main.innerHTML=resultsHtml()}
  else{back.textContent='‹ Results';title.textContent=S.cardFor?S.cardFor.dn:'';main.innerHTML=cardHtml()}
  document.querySelector('.nav').classList.toggle('long',S.view==='card');
@@ -89,8 +90,8 @@ function searchHtml(){const f=S.form;return ''+
  '<button class="btn" type="submit"'+(S.busy?' disabled':'')+'>SEARCH</button>'+
  (S.error?'<div class="err">'+esc(S.error)+'</div>':'')+
  '<div class="hint">At least 3 letters of the last name and 2 of the first.</div></form>'+
- '<button class="share" type="button" id="shareBtn">SHARE THIS APP</button>'+(S.shareOpen?shareHtml():'')+
- '<div class="note">Public court records from the Pennsylvania Unified Judicial System. Records can be late or incomplete — always check the full docket.</div>'}
+ '<div class="note">Public court records from the Pennsylvania Unified Judicial System. Records can be late or incomplete — always check the full docket.</div>'+
+ '<div class="shwrap"><button class="share" type="button" id="shareBtn">SHARE THIS APP</button>'+(S.shareOpen?shareHtml():'')+'</div>'}
 function resultsHtml(){if(S.busy)return '<div class="wait"><div class="spin"></div>Searching the court records…<br><span style="font-weight:600">This can take 10–30 seconds.</span></div>';
  if(S.error)return '<div class="err">'+esc(S.error)+'</div>';const r=S.results;if(!r)return '';
  if(!r.count)return '<div class="err">No dockets found for '+esc(r.searched.first+' '+r.searched.last)+'. Check the spelling, or try fewer letters, a different case type, or Any county.</div>';
