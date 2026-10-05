@@ -48,6 +48,7 @@ input:focus,select:focus{outline:none;border-color:#17324d}
 .pdf{display:block;text-align:center;border:2px solid #17324d;color:#17324d;font-weight:900;border-radius:10px;padding:12px;margin-top:12px;font-size:16px;text-decoration:none;background:#fff}
 .note{font-size:12px;color:#333;text-align:center;margin-top:14px;line-height:1.4}
 .hide{display:none}
+.clr{display:block;width:60%;margin:10px auto 0;text-align:center;background:#ea580c;color:#fff;font-weight:900;font-size:15px;border:none;border-radius:10px;padding:10px;cursor:pointer;font-family:inherit}
 .brand{display:flex;align-items:center;gap:12px;background:#17324d;color:#fff;padding:calc(10px + env(safe-area-inset-top)) 16px 10px}
 .brand img{width:54px;height:54px;border-radius:12px;background:#fff;flex:none}.brand .bn{font-size:25px;font-weight:900;letter-spacing:.3px;line-height:1.1}
 .brand a{display:inline-block;color:#9fd3ff;font-weight:800;font-size:18px;text-decoration:none;margin-top:2px}
@@ -76,7 +77,7 @@ html{background:#fff url(bg.jpg) repeat;background-size:250px auto}body{backgrou
 window.LL_API="https://script.google.com/macros/s/AKfycbxs4tI_oF_y-hUfI_Cs2_zyAW_7k4gIzLl6XvLXfVVkO-OjvYnhUxCUqERVdTXwHtB2/exec";
 const LL={build:'LL App Draft 3 (web)',counties:["Adams", "Allegheny", "Armstrong", "Beaver", "Bedford", "Berks", "Blair", "Bradford", "Bucks", "Butler", "Cambria", "Cameron", "Carbon", "Centre", "Chester", "Clarion", "Clearfield", "Clinton", "Columbia", "Crawford", "Cumberland", "Dauphin", "Delaware", "Elk", "Erie", "Fayette", "Forest", "Franklin", "Fulton", "Greene", "Huntingdon", "Indiana", "Jefferson", "Juniata", "Lackawanna", "Lancaster", "Lawrence", "Lebanon", "Lehigh", "Luzerne", "Lycoming", "McKean", "Mercer", "Mifflin", "Monroe", "Montgomery", "Montour", "Northampton", "Northumberland", "Perry", "Philadelphia", "Pike", "Potter", "Schuylkill", "Snyder", "Somerset", "Sullivan", "Susquehanna", "Tioga", "Union", "Venango", "Warren", "Washington", "Wayne", "Westmoreland", "Wyoming", "York"],appUrl:location.origin+location.pathname};
 ['build','counties','appUrl'].forEach(k=>{if(typeof LL[k]==='string'&&/^[\["]/.test(LL[k]))try{LL[k]=JSON.parse(LL[k])}catch(e){}});if(!Array.isArray(LL.counties))LL.counties=[];
-const S={view:'search',form:{last:'',first:'',dob:'',county:'',status:'Active',type:'criminal'},results:null,card:null,cardFor:null,open:{},busy:false,error:''};
+const S={view:'search',form:{last:'',first:'',dob:'',county:'',status:'Active',type:''},results:null,card:null,cardFor:null,open:{},busy:false,error:''};
 function dev(){try{let d=localStorage.getItem('llDev');if(!d){d=Math.random().toString(36).slice(2)+Date.now().toString(36);localStorage.setItem('llDev',d)}return d}catch(e){return 'nostore'}}
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c])}
 function call(fn,arg){return new Promise((ok,no)=>{if(false){google.script.run.withSuccessHandler(ok).withFailureHandler(e=>no(e))[fn](arg)}
@@ -109,8 +110,9 @@ function searchHtml(){const f=S.form;return ''+
  '<label for="dob">Date of birth</label><input id="dob" name="dob" value="'+esc(f.dob)+'" inputmode="numeric" placeholder="MM/DD/YYYY (optional)">'+
  '<div class="row"><div><label for="county">County</label><select id="county" name="county">'+opt('','Any',f.county)+LL.counties.map(c=>opt(c,c,f.county)).join('')+'</select></div>'+
  '<div><label for="status">Status</label><select id="status" name="status">'+opt('','Any',f.status)+['Active','Inactive','Closed','Adjudicated'].map(c=>opt(c,c,f.status)).join('')+'</select></div></div>'+
- '<label for="type">Case type</label><select id="type" name="type">'+[['criminal','Criminal (all courts)'],['non-traffic','Non-Traffic (summary)'],['traffic','Traffic'],['summary-appeal','Summary Appeal'],['all','All case types']].map(x=>opt(x[0],x[1],f.type)).join('')+'</select>'+
+ '<label for="type">Case type</label><select id="type" name="type">'+opt('','Choose a case type',f.type)+[['criminal','Criminal (all courts)'],['non-traffic','Non-Traffic (summary)'],['traffic','Traffic'],['summary-appeal','Summary Appeal'],['all','All case types']].map(x=>opt(x[0],x[1],f.type)).join('')+'</select>'+
  '<button class="btn" type="submit"'+(S.busy?' disabled':'')+'>SEARCH</button>'+
+ '<button class="clr" type="button" id="clearBtn">CLEAR</button>'+
  (S.error?'<div class="err">'+esc(S.error)+'</div>':'')+
  '<div class="hint">At least 3 letters of the last name and 2 of the first.</div></form>'+
  '<div class="note">Public court records from the Pennsylvania Unified Judicial System. Records can be late or incomplete — always check the full docket.</div>'+
@@ -161,11 +163,13 @@ function peopleHtml(c){let h='<div class="pt"><div class="r">Defense attorney</d
 function wire(){const f=document.getElementById('sf');
  if(f)f.onsubmit=e=>{e.preventDefault();const F=S.form;['last','first','dob','county','status','type'].forEach(k=>F[k]=document.getElementById(k).value.trim());
   if(F.last.replace(/[^A-Za-z]/g,'').length<3||F.first.replace(/[^A-Za-z]/g,'').length<2){S.error='Type at least 3 letters of the last name and 2 of the first name.';render();return}
+  if(!F.type){S.error='Choose a case type.';render();return}
   if(F.dob&&!/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(F.dob)){S.error='Type the birth date as MM/DD/YYYY, or leave it blank.';render();return}
   S.busy=true;S.results=null;go('results');call('llSearch',Object.assign({dev:dev()},F)).then(r=>{S.busy=false;if(r&&r.error){S.error=r.error}else S.results=r;render()},e=>{S.busy=false;S.error=msg(e);render()})};
  document.querySelectorAll('[data-open]').forEach(b=>b.onclick=()=>{const [pi,di]=b.getAttribute('data-open').split(':').map(Number),d=S.results.people[pi].dockets[di];
   S.cardFor=d;S.card=null;S.open={};S.busy=true;go('card');
   call('llCard',{dev:dev(),dn:d.dn,url:d.url,county:d.county,status:d.status,name:d.name,dob:d.dob,filed:d.filed}).then(r=>{if(S.cardFor!==d)return;S.busy=false;if(r&&r.error)S.error=r.error;else S.card=r.card;render()},e=>{S.busy=false;S.error=msg(e);render()})});
+ const cb=document.getElementById('clearBtn');if(cb)cb.onclick=()=>{S.form={last:'',first:'',dob:'',county:'',status:'Active',type:''};S.results=null;S.card=null;S.cardFor=null;S.error='';S.shareOpen=false;render();const l=document.getElementById('last');if(l)l.focus()};
  const sb=document.getElementById('shareBtn');if(sb)sb.onclick=()=>{const t=shareText();if(navigator.share){navigator.share({title:'Latoison Law',text:t}).catch(()=>{S.shareOpen=true;render()});return}S.shareOpen=!S.shareOpen;render()};
  document.querySelectorAll('[data-sec]').forEach(b=>b.onclick=()=>{const k=b.getAttribute('data-sec');S.open[k]=!S.open[k];render()});
  const dob=document.getElementById('dob');if(dob)dob.oninput=()=>{let v=dob.value.replace(/[^\d]/g,'').slice(0,8);if(v.length>4)v=v.slice(0,2)+'/'+v.slice(2,4)+'/'+v.slice(4);else if(v.length>2)v=v.slice(0,2)+'/'+v.slice(2);dob.value=v}}
