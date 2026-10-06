@@ -69,6 +69,17 @@ html{background:#fff url(bg.jpg) repeat;background-size:250px auto}body{backgrou
 .shbox a.em{background:#17324d}.shbox textarea{width:100%;height:150px;border:2px solid #9aa8b6;border-radius:8px;font-size:13px;font-family:inherit;padding:8px}
 .shbox .t{font-size:13px;font-weight:800;color:#17324d;margin:4px 0 6px}
 .ch .sn{font-size:12.5px;font-weight:800;color:#111;margin-top:2px}.ch .cn{font-size:12px;color:#333}
+/* Approved 10/6: Libre Franklin everywhere, "Latoison Law" in Playfair Display; compact search form */
+@font-face{font-family:'Libre Franklin';font-weight:400;font-display:swap;src:url(fonts/libre-franklin-latin-400-normal.woff2) format('woff2')}@font-face{font-family:'Libre Franklin';font-weight:600;font-display:swap;src:url(fonts/libre-franklin-latin-600-normal.woff2) format('woff2')}@font-face{font-family:'Libre Franklin';font-weight:700;font-display:swap;src:url(fonts/libre-franklin-latin-700-normal.woff2) format('woff2')}@font-face{font-family:'Libre Franklin';font-weight:800;font-display:swap;src:url(fonts/libre-franklin-latin-800-normal.woff2) format('woff2')}@font-face{font-family:'Playfair Display';font-weight:800;font-display:swap;src:url(fonts/playfair-display-latin-800-normal.woff2) format('woff2')}html,body,button,input,select,textarea{font-family:"Libre Franklin",-apple-system,Arial,sans-serif!important}.brand .bn{font-family:"Playfair Display",serif!important;letter-spacing:.5px;}label{font-size:13px!important;margin:10px 0 4px!important;letter-spacing:.2px}label .opt{font-weight:600;color:#5b6b7b;font-size:11.5px;margin-left:4px;text-transform:uppercase;letter-spacing:.5px}
+input,select{height:44px!important;font-size:16px!important;border-radius:9px!important;border-width:1.5px!important;border-color:#b8c4cf!important;background-color:#f8fafc!important}
+input:focus,select:focus{border-color:#17324d!important;background-color:#fff!important;box-shadow:0 0 0 3px rgba(23,50,77,.12)}
+.row{gap:10px!important}
+.btns{display:flex;gap:10px;margin-top:16px}
+.btns .btn{flex:2;margin:0!important;padding:0!important;height:50px;font-size:17px!important;letter-spacing:1.5px;border-radius:11px!important;box-shadow:0 2px 0 #0f5534}
+.btns .clr{flex:1;width:auto!important;margin:0!important;height:50px;padding:0!important;background:#fff!important;color:#c2410c!important;border:2px solid #ea580c!important;border-radius:11px!important;font-size:15px!important;letter-spacing:1px}
+#sf{padding:4px 14px 14px!important}
+.hint{font-size:12.5px!important;color:#3b4a59!important;margin-top:8px!important}
+
 </style></head>
 <body>
 <div class="brand"><img src="icon-192.png" alt=""><div><div class="bn">Latoison Law</div><a href="tel:6109991439">610-999-1439</a></div></div>
@@ -109,12 +120,11 @@ function opt(v,t,sel){return '<option value="'+esc(v)+'"'+(v===sel?' selected':'
 function searchHtml(){const f=S.form;return ''+
  '<form id="sf" autocomplete="off"><div class="row"><div><label for="last">Last name</label><input id="last" name="last" value="'+esc(f.last)+'" autocapitalize="words"></div>'+
  '<div><label for="first">First name</label><input id="first" name="first" value="'+esc(f.first)+'" autocapitalize="words"></div></div>'+
- '<label for="dob">Date of birth</label><input id="dob" name="dob" value="'+esc(f.dob)+'" inputmode="numeric" placeholder="MM/DD/YYYY (optional)">'+
- '<div class="row"><div><label for="county">County</label><select id="county" name="county">'+opt('','Any',f.county)+LL.counties.map(c=>opt(c,c,f.county)).join('')+'</select></div>'+
+ '<div class="row"><div class="dobc"><label for="dob">Birth date <span class="opt">optional</span></label><input id="dob" name="dob" value="'+esc(f.dob)+'" inputmode="numeric" placeholder="MM/DD/YYYY"></div>'+
  '<div><label for="status">Status</label><select id="status" name="status">'+opt('','Any',f.status)+['Active','Inactive','Closed','Adjudicated'].map(c=>opt(c,c,f.status)).join('')+'</select></div></div>'+
- '<label for="type">Case type</label><select id="type" name="type">'+opt('','Choose a case type',f.type)+[['criminal','Criminal (all courts)'],['non-traffic','Non-Traffic (summary)'],['traffic','Traffic'],['summary-appeal','Summary Appeal'],['all','All case types']].map(x=>opt(x[0],x[1],f.type)).join('')+'</select>'+
- '<button class="btn" type="submit"'+(S.busy?' disabled':'')+'>SEARCH</button>'+
- '<button class="clr" type="button" id="clearBtn">CLEAR</button>'+
+ '<div class="row"><div><label for="county">County</label><select id="county" name="county">'+opt('','Any',f.county)+LL.counties.map(c=>opt(c,c,f.county)).join('')+'</select></div>'+
+ '<div><label for="type">Case type</label><select id="type" name="type">'+opt('','Choose…',f.type)+[['criminal','Criminal'],['non-traffic','Non-Traffic'],['traffic','Traffic'],['summary-appeal','Summary Appeal'],['all','All types']].map(x=>opt(x[0],x[1],f.type)).join('')+'</select></div></div>'+
+ '<div class="btns"><button class="btn" type="submit"'+(S.busy?' disabled':'')+'>SEARCH</button><button class="clr" type="button" id="clearBtn">CLEAR</button></div>'+
  (S.error?'<div class="err">'+esc(S.error)+'</div>':'')+
  '<div class="hint">At least 3 letters of the last name and 2 of the first.</div></form>'+
  '<div class="note">Public court records from the Pennsylvania Unified Judicial System. Records can be late or incomplete — always check the full docket.</div>'+
@@ -152,7 +162,7 @@ function cardHtml(){const d=S.cardFor;if(S.busy)return '<div class="wait"><div c
 function sharePanelHtml(t){const e=encodeURIComponent(t);return '<div class="shbox" style="border-top:2px solid #17324d;border-radius:12px;margin:0 0 12px"><a href="sms:?&body='+e+'" target="_top">TEXT IT</a><a class="em" href="mailto:?subject='+encodeURIComponent('Docket information')+'&body='+e+'" target="_top">EMAIL IT</a><div class="t">Or copy this message:</div><textarea readonly>'+esc(t)+'</textarea></div>'}
 function appLink(){return LL.appUrl||location.href}
 function resultsShareText(){const r=S.results||{},F=r.searched||{};let t='Docket search — '+(F.first||'')+' '+(F.last||'')+'\n';
- (r.people||[]).forEach(p=>{t+='\n'+p.name+(p.dob?' — DOB '+p.dob:'')+'\n';p.dockets.forEach((d,i)=>{const nx=d.next?(String(d.next).match(/\d{1,2}\/\d{1,2}\/\d{4}/)||[d.next])[0]:'';t+=(i+1)+'. '+d.dn+' · '+(d.court==='CCP'?'Common Pleas':d.court==='MC'?'Municipal Court':'District Court')+' · '+d.county+' · '+String(d.status||'').toUpperCase()+(nx?' · next '+nx:'')+'\n'})});
+ (r.people||[]).forEach(p=>{t+='\n'+p.name+(p.dob?' — DOB '+p.dob:'')+'\n';p.dockets.forEach((d,i)=>{const nx=d.next?(String(d.next).match(/\d{1,2}\/\d{1,2}\/\d{4}/)||[d.next])[0]:'';t+=(i+1)+'. '+d.dn+' · '+(d.court==='CCP'?'Common Pleas':d.court==='MC'?'Municipal Court':'District Court')+' · '+d.county+' · '+String(d.status||'').toUpperCase()+(nx?' · next '+nx:'')+'\n'+(d.url?'   Open docket: '+d.url+'\n':'')})});
  return t+'\nLatoison Law app: '+appLink()}
 function cardShareText(){const c=S.card,d=S.cardFor||{};if(!c)return '';const n=c.next,cu=c.custody,L=[];
  L.push((c.name||d.name||'')+(c.dob?' — DOB '+c.dob:''));L.push(c.dn+' · '+(c.court==='CCP'?'Common Pleas':c.court==='MC'?'Municipal Court':'District Court')+' · '+c.county+' · '+String(c.status||'').toUpperCase());
