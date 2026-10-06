@@ -166,27 +166,27 @@ function tCase(x){return String(x||'').toLowerCase().replace(/(^|[\s'-])\w/g,m=>
 function nxDate(v){const m=String(v||'').match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);if(!m)return '';const d=('0'+m[1]).slice(-2)+'/'+('0'+m[2]).slice(-2)+'/'+m[3];return day(d)+' '+d}
 // Short links back into the app: ?d=<docket>&h=<court key> opens that docket; ?r=Last.First opens these search results
 const DEF_RPT={MJ:'MdjDocketSheet',CP:'CpDocketSheet'};
-function dLink(dn,url){const u=String(url||''),h=(u.match(/[?&]dnh=([^&#]+)/i)||[])[1],rp=(u.match(/\/Report\/(\w+)/i)||[])[1],k=String(dn).slice(0,2);
- let q='?d='+encodeURIComponent(dn);if(h)q+='&h='+h;if(rp&&rp!==DEF_RPT[k])q+='&p='+rp;return appLink()+q}
+function dLink(dn,url,co){const u=String(url||''),h=(u.match(/[?&]dnh=([^&#]+)/i)||[])[1],rp=(u.match(/\/Report\/(\w+)/i)||[])[1],k=String(dn).slice(0,2);
+ let q='?d='+encodeURIComponent(dn);if(h)q+='&h='+h;if(rp&&rp!==DEF_RPT[k])q+='&p='+rp;if(co)q+='&c='+encodeURIComponent(co);return appLink()+q}
 function rLink(F){F=F||{};let q='?r='+encodeURIComponent(tCase(F.last).replace(/\s+/g,'_'))+'.'+encodeURIComponent(tCase(F.first).replace(/\s+/g,'_'));
  if(F.dob)q+='&b='+F.dob.replace(/\//g,'-');if(F.county)q+='&c='+encodeURIComponent(F.county);if(F.status&&F.status!=='Active')q+='&s='+encodeURIComponent(F.status);if(F.type&&String(F.type).toLowerCase()!=='criminal')q+='&t='+encodeURIComponent(String(F.type).toLowerCase());return appLink()+q}
 const FOOT='— Latoison Law · 610-999-1439';
 function resultsShareText(){const r=S.results||{},F=r.searched||{},L=[];
  L.push('Docket search: '+tCase((F.first||'')+' '+(F.last||'')).trim());L.push('See these results: '+rLink(F));
  (r.people||[]).forEach(p=>{L.push('');L.push(String(p.name||'').toUpperCase());if(p.dob)L.push('DOB '+p.dob);
-  p.dockets.forEach((d,i)=>{const nx=nxDate(d.next);L.push('');L.push((i+1)+') '+d.dn);L.push(courtAb(d.court)+' · '+d.county+' · '+String(d.status||'').toUpperCase());
-   L.push(nx?'Next: '+nx:'No court date scheduled');L.push('Open: '+dLink(d.dn,d.url))})});
+  p.dockets.forEach((d,i)=>{const nx=nxDate(d.next);L.push('');L.push((i+1)+') '+d.dn);L.push([courtAb(d.court),d.county,String(d.status||'').toUpperCase()].filter(Boolean).join(' · '));
+   L.push(nx?'Next: '+nx:'No court date scheduled');L.push('Open: '+dLink(d.dn,d.url,d.county))})});
  L.push('');L.push(FOOT);return L.join('\n')}
 function shareName(n){n=String(n||'').trim();const m=n.match(/^([^,]+),\s*(\S+)/);return (m?m[2]+' '+m[1]:n).toUpperCase()}
 function cardShareText(){const c=S.card,d=S.cardFor||{};if(!c)return '';const n=c.next,cu=c.custody,L=[];
- L.push(shareName(c.name||d.name));if(c.dob)L.push('DOB '+c.dob);L.push(c.dn);L.push(courtAb(c.court)+' · '+c.county+' · '+String(c.status||'').toUpperCase());
+ L.push(shareName(c.name||d.name));if(c.dob)L.push('DOB '+c.dob);L.push(c.dn);L.push([courtAb(c.court),c.county||d.county,String(c.status||'').toUpperCase()].filter(Boolean).join(' · '));
  L.push('');if(n){const p=llPlace(c,n);L.push('NEXT COURT DATE');if(n.type)L.push(n.type);L.push(nxDate(n.date)+(n.time?' · '+n.time:''));if(n.judge)L.push('Judge '+lastNm(n.judge));
   if(p){if(p.name)L.push(p.name);const a=[p.street,p.city].filter(Boolean).join(', ');if(a)L.push(a)}}else L.push('No court date scheduled');
  L.push('');L.push('CUSTODY / BAIL');L.push(cu&&cu.in?'IN CUSTODY'+(cu.location?' — '+cu.location:'')+(cu.since?' (since '+cu.since+')':''):'Not in custody'+(cu&&cu.released?' (released '+cu.released+')':''));
  L.push('Bail: '+(c.bail_now||'None listed'));
  if(c.officer||c.agency){L.push('');L.push('ARRESTING OFFICER');L.push((c.officer||'None listed')+(c.agency?' — '+c.agency:''))}
  if(c.charges.length){L.push('');L.push('CHARGES ('+c.charges.length+')');c.charges.slice(0,4).forEach((x,i)=>L.push((i+1)+') '+(x.grade?x.grade+' ':'')+x.desc+(x.disp?' — '+x.disp:'')));if(c.charges.length>4)L.push('+ '+(c.charges.length-4)+' more')}
- L.push('');L.push('Open in the app: '+dLink(c.dn,c.url||d.url));L.push('');L.push(FOOT);return L.join('\n')}
+ L.push('');L.push('Open in the app: '+dLink(c.dn,c.url||d.url,c.county||d.county));L.push('');L.push(FOOT);return L.join('\n')}
 function doShare(kind){const t=kind==='card'?cardShareText():resultsShareText();
  // text only (no title): a title becomes an MMS subject on Android group texts and the message arrived blank
  if(navigator.share){navigator.share({text:t}).catch(e=>{if(e&&e.name==='AbortError')return;S.sharePanel=kind;render()});return}
@@ -225,7 +225,7 @@ function fromLink(){let q;try{q=new URLSearchParams(location.search)}catch(e){re
  if(dn||r){try{history.replaceState({v:'search'},'',location.pathname)}catch(e){}}
  if(dn&&/^(MJ-\d{5}|CP-\d{2}|MC-\d{2})-[A-Z]{2}-\d{7}-\d{4}$/.test(dn)){const h=q.get('h'),rp=q.get('p')||DEF_RPT[dn.slice(0,2)];
   if(!h||!rp){S.error='This link is missing part of the docket address. Search the name to open it.';render();return true}
-  openCard({dn:dn,url:'https://ujsportal.pacourts.us/Report/'+rp+'?docketNumber='+encodeURIComponent(dn)+'&dnh='+encodeURIComponent(h)},true);return true}
+  openCard({dn:dn,county:q.get('c')||'',url:'https://ujsportal.pacourts.us/Report/'+rp+'?docketNumber='+encodeURIComponent(dn)+'&dnh='+encodeURIComponent(h)},true);return true}
  if(r){const m=String(r).split('.'),un=x=>String(x||'').replace(/_/g,' ').trim();S.form={last:un(m[0]),first:un(m.slice(1).join('.')),dob:String(q.get('b')||'').replace(/-/g,'/'),county:q.get('c')||'',status:q.get('s')||'Active',type:q.get('t')||'criminal'};
   if(S.form.last&&S.form.first){runSearch(true);return true}}
  return false}
