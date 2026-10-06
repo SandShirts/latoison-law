@@ -98,7 +98,7 @@ function call(fn,arg){return new Promise((ok,no)=>{if(false){google.script.run.w
 function stCls(s){return /^active/i.test(s)?'':/^inactive/i.test(s)?'i':/^adjud/i.test(s)?'a':'c'}
 function day(us){const m=String(us||'').match(/(\d{2})\/(\d{2})\/(\d{4})/);if(!m)return '';return ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][new Date(+m[3],m[1]-1,+m[2]).getDay()]}
 function go(view,push){S.view=view;S.error='';S.sharePanel='';if(push!==false){try{history.pushState({v:view},'');S.depth=(S.depth||0)+1}catch(e){}}render();window.scrollTo(0,0)}
-window.addEventListener('popstate',e=>{S.depth=Math.max(0,(S.depth||0)-1);const v=e.state&&e.state.v||'search';S.view=v==='card'&&!S.card?(S.results?'results':'search'):v;render()});
+window.addEventListener('popstate',e=>{S.depth=Math.max(0,(S.depth||0)-1);const v=e.state&&e.state.v||'search';S.view=v==='card'&&!S.card&&!S.busy?(S.results?'results':'search'):v;render()});
 
 function lastNm(n){const t=String(n||'').replace(/[.,]/g,' ').split(/\s+/).filter(x=>x&&!/^(jr|sr|ii|iii|iv)$/i.test(x));return t.length?t[t.length-1]:''}
 function llPlace(c,e){const dn=String(c.dn||''),t=String((e&&e.type)||''),cp=LL_CP[c.county],P=a=>({name:a[0],street:a[1],city:a[2]+', PA '+a[3]});
@@ -161,16 +161,32 @@ function cardHtml(){const d=S.cardFor;if(S.busy)return '<div class="wait"><div c
  return h}
 function sharePanelHtml(t){const e=encodeURIComponent(t);return '<div class="shbox" style="border-top:2px solid #17324d;border-radius:12px;margin:0 0 12px"><a href="sms:?&body='+e+'" target="_top">TEXT IT</a><a class="em" href="mailto:?subject='+encodeURIComponent('Docket information')+'&body='+e+'" target="_top">EMAIL IT</a><div class="t">Or copy this message:</div><textarea readonly>'+esc(t)+'</textarea></div>'}
 function appLink(){return LL.appUrl||location.href}
-function resultsShareText(){const r=S.results||{},F=r.searched||{};let t='Docket search — '+(F.first||'')+' '+(F.last||'')+'\n';
- (r.people||[]).forEach(p=>{t+='\n'+p.name+(p.dob?' — DOB '+p.dob:'')+'\n';p.dockets.forEach((d,i)=>{const nx=d.next?(String(d.next).match(/\d{1,2}\/\d{1,2}\/\d{4}/)||[d.next])[0]:'';t+=(i+1)+'. '+d.dn+' · '+(d.court==='CCP'?'Common Pleas':d.court==='MC'?'Municipal Court':'District Court')+' · '+d.county+' · '+String(d.status||'').toUpperCase()+(nx?' · next '+nx:'')+'\n'+(d.url?'   Open docket: '+d.url+'\n':'')})});
- return t+'\nLatoison Law app: '+appLink()}
+function courtAb(c){return c==='CCP'?'CCP':c==='MC'?'MC':'MDJ'}
+function tCase(x){return String(x||'').toLowerCase().replace(/(^|[\s'-])\w/g,m=>m.toUpperCase())}
+function nxDate(v){const m=String(v||'').match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);if(!m)return '';const d=('0'+m[1]).slice(-2)+'/'+('0'+m[2]).slice(-2)+'/'+m[3];return day(d)+' '+d}
+// Short links back into the app: ?d=<docket>&h=<court key> opens that docket; ?r=Last.First opens these search results
+const DEF_RPT={MJ:'MdjDocketSheet',CP:'CpDocketSheet'};
+function dLink(dn,url){const u=String(url||''),h=(u.match(/[?&]dnh=([^&#]+)/i)||[])[1],rp=(u.match(/\/Report\/(\w+)/i)||[])[1],k=String(dn).slice(0,2);
+ let q='?d='+encodeURIComponent(dn);if(h)q+='&h='+h;if(rp&&rp!==DEF_RPT[k])q+='&p='+rp;return appLink()+q}
+function rLink(F){F=F||{};let q='?r='+encodeURIComponent(tCase(F.last).replace(/\s+/g,'_'))+'.'+encodeURIComponent(tCase(F.first).replace(/\s+/g,'_'));
+ if(F.dob)q+='&b='+F.dob.replace(/\//g,'-');if(F.county)q+='&c='+encodeURIComponent(F.county);if(F.status&&F.status!=='Active')q+='&s='+encodeURIComponent(F.status);if(F.type&&String(F.type).toLowerCase()!=='criminal')q+='&t='+encodeURIComponent(String(F.type).toLowerCase());return appLink()+q}
+const FOOT='— Latoison Law · 610-999-1439';
+function resultsShareText(){const r=S.results||{},F=r.searched||{},L=[];
+ L.push('Docket search: '+tCase((F.first||'')+' '+(F.last||'')).trim());L.push('See these results: '+rLink(F));
+ (r.people||[]).forEach(p=>{L.push('');L.push(String(p.name||'').toUpperCase());if(p.dob)L.push('DOB '+p.dob);
+  p.dockets.forEach((d,i)=>{const nx=nxDate(d.next);L.push('');L.push((i+1)+') '+d.dn);L.push(courtAb(d.court)+' · '+d.county+' · '+String(d.status||'').toUpperCase());
+   L.push(nx?'Next: '+nx:'No court date scheduled');L.push('Open: '+dLink(d.dn,d.url))})});
+ L.push('');L.push(FOOT);return L.join('\n')}
+function shareName(n){n=String(n||'').trim();const m=n.match(/^([^,]+),\s*(\S+)/);return (m?m[2]+' '+m[1]:n).toUpperCase()}
 function cardShareText(){const c=S.card,d=S.cardFor||{};if(!c)return '';const n=c.next,cu=c.custody,L=[];
- L.push((c.name||d.name||'')+(c.dob?' — DOB '+c.dob:''));L.push(c.dn+' · '+(c.court==='CCP'?'Common Pleas':c.court==='MC'?'Municipal Court':'District Court')+' · '+c.county+' · '+String(c.status||'').toUpperCase());
- if(n){const p=llPlace(c,n);L.push('NEXT: '+n.type+' — '+day(n.date)+' '+n.date+' '+n.time+(n.judge?' — Judge '+lastNm(n.judge):''));if(p)L.push('Where: '+[p.name,p.street,p.city].filter(Boolean).join(', '))}else L.push('No court date scheduled');
- L.push(cu&&cu.in?'IN CUSTODY'+(cu.location?' — '+cu.location:'')+(cu.since?' (since '+cu.since+')':''):'Not in custody'+(cu&&cu.released?' (released '+cu.released+')':''));
- if(c.bail_now)L.push('Bail: '+c.bail_now);if(c.judge)L.push('Judge: '+c.judge);if(c.officer||c.agency)L.push('Arresting officer: '+(c.officer||'None listed')+(c.agency?' — '+c.agency:''));
- if(c.charges.length){L.push('Charges:');c.charges.slice(0,4).forEach((x,i)=>L.push((i+1)+'. '+(x.grade?x.grade+' ':'')+x.desc+(x.disp?' — '+x.disp:'')));if(c.charges.length>4)L.push('(+'+(c.charges.length-4)+' more)')}
- L.push('Full docket: '+(c.url||d.url||''));return L.join('\n')}
+ L.push(shareName(c.name||d.name));if(c.dob)L.push('DOB '+c.dob);L.push(c.dn);L.push(courtAb(c.court)+' · '+c.county+' · '+String(c.status||'').toUpperCase());
+ L.push('');if(n){const p=llPlace(c,n);L.push('NEXT COURT DATE');if(n.type)L.push(n.type);L.push(nxDate(n.date)+(n.time?' · '+n.time:''));if(n.judge)L.push('Judge '+lastNm(n.judge));
+  if(p){if(p.name)L.push(p.name);const a=[p.street,p.city].filter(Boolean).join(', ');if(a)L.push(a)}}else L.push('No court date scheduled');
+ L.push('');L.push('CUSTODY / BAIL');L.push(cu&&cu.in?'IN CUSTODY'+(cu.location?' — '+cu.location:'')+(cu.since?' (since '+cu.since+')':''):'Not in custody'+(cu&&cu.released?' (released '+cu.released+')':''));
+ L.push('Bail: '+(c.bail_now||'None listed'));
+ if(c.officer||c.agency){L.push('');L.push('ARRESTING OFFICER');L.push((c.officer||'None listed')+(c.agency?' — '+c.agency:''))}
+ if(c.charges.length){L.push('');L.push('CHARGES ('+c.charges.length+')');c.charges.slice(0,4).forEach((x,i)=>L.push((i+1)+') '+(x.grade?x.grade+' ':'')+x.desc+(x.disp?' — '+x.disp:'')));if(c.charges.length>4)L.push('+ '+(c.charges.length-4)+' more')}
+ L.push('');L.push('Open in the app: '+dLink(c.dn,c.url||d.url));L.push('');L.push(FOOT);return L.join('\n')}
 function doShare(kind){const t=kind==='card'?cardShareText():resultsShareText();
  // text only (no title): a title becomes an MMS subject on Android group texts and the message arrived blank
  if(navigator.share){navigator.share({text:t}).catch(e=>{if(e&&e.name==='AbortError')return;S.sharePanel=kind;render()});return}
@@ -193,19 +209,30 @@ function wire(){const f=document.getElementById('sf');
   if(F.last.replace(/[^A-Za-z]/g,'').length<3||F.first.replace(/[^A-Za-z]/g,'').length<2){S.error='Type at least 3 letters of the last name and 2 of the first name.';render();return}
   if(!F.type){S.error='Choose a case type.';render();return}
   if(F.dob&&!/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(F.dob)){S.error='Type the birth date as MM/DD/YYYY, or leave it blank.';render();return}
-  S.busy=true;S.results=null;go('results');call('llSearch',Object.assign({dev:dev()},F)).then(r=>{S.busy=false;if(r&&r.error){S.error=r.error}else S.results=r;render()},e=>{S.busy=false;S.error=msg(e);render()})};
+  runSearch()};
  document.querySelectorAll('[data-open]').forEach(b=>b.onclick=()=>{const [pi,di]=b.getAttribute('data-open').split(':').map(Number),d=S.results.people[pi].dockets[di];
-  S.cardFor=d;S.card=null;S.open={};S.busy=true;go('card');
-  call('llCard',{dev:dev(),dn:d.dn,url:d.url,county:d.county,status:d.status,name:d.name,dob:d.dob,filed:d.filed}).then(r=>{if(S.cardFor!==d)return;S.busy=false;if(r&&r.error)S.error=r.error;else S.card=r.card;render()},e=>{S.busy=false;S.error=msg(e);render()})});
+  openCard(d)});
  const cb=document.getElementById('clearBtn');if(cb)cb.onclick=()=>{S.form={last:'',first:'',dob:'',county:'',status:'Active',type:''};S.results=null;S.card=null;S.cardFor=null;S.error='';S.shareOpen=false;render();const l=document.getElementById('last');if(l)l.focus()};
  document.querySelectorAll('[data-share]').forEach(b=>b.onclick=()=>doShare(b.getAttribute('data-share')));
  const sb=document.getElementById('shareBtn');if(sb)sb.onclick=()=>{const t=shareText();if(navigator.share){navigator.share({text:t}).catch(e=>{if(e&&e.name==='AbortError')return;S.shareOpen=true;render()});return}S.shareOpen=!S.shareOpen;render()};
  document.querySelectorAll('[data-sec]').forEach(b=>b.onclick=()=>{const k=b.getAttribute('data-sec');S.open[k]=!S.open[k];render()});
  const dob=document.getElementById('dob');if(dob)dob.oninput=()=>{let v=dob.value.replace(/[^\d]/g,'').slice(0,8);if(v.length>4)v=v.slice(0,2)+'/'+v.slice(2,4)+'/'+v.slice(4);else if(v.length>2)v=v.slice(0,2)+'/'+v.slice(2);dob.value=v}}
+function openCard(d,push){S.cardFor=d;S.card=null;S.open={};S.busy=true;go('card',push);
+ call('llCard',{dev:dev(),dn:d.dn,url:d.url,county:d.county||'',status:d.status||'',name:d.name||'',dob:d.dob||'',filed:d.filed||''}).then(r=>{if(S.cardFor!==d)return;S.busy=false;if(r&&r.error)S.error=r.error;else S.card=r.card;render()},e=>{S.busy=false;S.error=msg(e);render()})}
+function runSearch(push){const F=S.form;S.busy=true;S.results=null;go('results',push);call('llSearch',Object.assign({dev:dev()},F)).then(r=>{S.busy=false;if(r&&r.error){S.error=r.error}else S.results=r;render()},e=>{S.busy=false;S.error=msg(e);render()})}
+// Opened from a shared link: ?d= opens that docket, ?r= runs that search
+function fromLink(){let q;try{q=new URLSearchParams(location.search)}catch(e){return false}const dn=String(q.get('d')||'').toUpperCase().trim(),r=q.get('r');
+ if(dn||r){try{history.replaceState({v:'search'},'',location.pathname)}catch(e){}}
+ if(dn&&/^(MJ-\d{5}|CP-\d{2}|MC-\d{2})-[A-Z]{2}-\d{7}-\d{4}$/.test(dn)){const h=q.get('h'),rp=q.get('p')||DEF_RPT[dn.slice(0,2)];
+  if(!h||!rp){S.error='This link is missing part of the docket address. Search the name to open it.';render();return true}
+  openCard({dn:dn,url:'https://ujsportal.pacourts.us/Report/'+rp+'?docketNumber='+encodeURIComponent(dn)+'&dnh='+encodeURIComponent(h)},true);return true}
+ if(r){const m=String(r).split('.'),un=x=>String(x||'').replace(/_/g,' ').trim();S.form={last:un(m[0]),first:un(m.slice(1).join('.')),dob:String(q.get('b')||'').replace(/-/g,'/'),county:q.get('c')||'',status:q.get('s')||'Active',type:q.get('t')||'criminal'};
+  if(S.form.last&&S.form.first){runSearch(true);return true}}
+ return false}
 function msg(e){return String(e&&e.message||e||'Something went wrong. Please try again.').replace(/^Exception:\s*/,'')}
 document.getElementById('homeBtn').onclick=()=>{if(S.view!=='search'){S.sharePanel='';go('search')}};
-document.getElementById('back').onclick=()=>{if(S.view==='search')return;if(S.depth>0){try{history.back();return}catch(e){}}go(S.view==='card'?'results':'search',false)};
+document.getElementById('back').onclick=()=>{if(S.view==='search')return;if(S.depth>0){try{history.back();return}catch(e){}}go(S.view==='card'&&S.results?'results':'search',false)};
 try{history.replaceState({v:'search'},'')}catch(e){}
-render();
+render();fromLink();
 </script>
 </body></html>
