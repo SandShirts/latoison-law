@@ -17,18 +17,11 @@ h2{font-size:14px;letter-spacing:1px;color:#526579;margin:8px 2px}
 </style></head><body>
 <div class="top"><img src="icon-192.png" alt=""><div><b>LL Office</b><span>Latoison Law Office Manager</span></div></div>
 <div class="wrap">
-<a class="go" id="go" href="#">OPEN THE OFFICE MANAGER</a>
-<h2>OR GO STRAIGHT TO</h2>
-<a class="sec" data-app="lt" href="#">🏠 Landlord-Tenant</a>
-<a class="sec" data-app="traffic" href="#">🚦 Traffic</a>
-<a class="sec" data-app="nontraffic" href="#">🎫 Non-Traffic</a>
-<a class="sec" data-app="criminal" href="#">⚖️ Criminal</a>
-<a class="sec" data-app="expungements" href="#">🧾 Expungements</a>
-<div class="note">Sign in with your Latoison Law Google account, then your office PIN. To put this on your home screen: Android (Chrome) — menu ⋮ → <b>Add to Home screen</b>; iPhone (Safari) — Share → <b>Add to Home Screen</b>.</div>
+<a class="go" id="go" href="#">OPEN LL OFFICE</a>
+<div class="note">Payments, Calendar, Court Reminders and New Potentials. Sign in with your office PIN. To put this on your home screen: Android (Chrome) — menu ⋮ → <b>Add to Home screen</b>; iPhone (Safari) — Share → <b>Add to Home Screen</b>.</div>
 </div>
 <script>
 const OFFICE='https://script.google.com/a/macros/latoisonlaw.com/s/AKfycbykyjHO-Z5B9KknvJraVK7fA1di4u0DOtP3qLqaZhKDh-dCKna2-pk7sX7T6H0Dl15q/exec';
-document.getElementById('go').href=OFFICE;
-document.querySelectorAll('a[data-app]').forEach(a=>{a.href=OFFICE+'?app='+a.dataset.app});
+document.getElementById('go').href=OFFICE+'?app=phone';
 </script>
 </body></html>
