@@ -48,6 +48,7 @@ input:focus,select:focus{outline:none;border-color:#17324d}
 .pt{padding:7px 0;border-bottom:1px solid #e3e8ee;font-size:14.5px}.pt:last-child{border:none}.pt .r{font-size:12px;font-weight:900;color:#17324d;text-transform:uppercase}
 .pt a{color:#0b4fa0;font-weight:800}
 .pdf{display:block;text-align:center;border:2px solid #17324d;color:#17324d;font-weight:900;border-radius:10px;padding:12px;margin-top:12px;font-size:16px;text-decoration:none;background:#fff}
+.skey{background:#0b2545;color:#8fd3ff;border-radius:10px;padding:10px 14px;margin-top:12px;font-size:15px;line-height:1.6;box-shadow:0 1px 3px rgba(0,0,0,.25)}.skey b{color:#8fd3ff;font-weight:900}.skh{color:#ff9a3c;font-weight:900;letter-spacing:.06em;font-size:16px;border-bottom:1px solid rgba(255,154,60,.55);margin-bottom:4px;padding-bottom:2px}
 .note{font-size:12px;color:#333;text-align:center;margin-top:14px;line-height:1.4}
 .hide{display:none}
 .clr{display:block;width:60%;margin:10px auto 0;text-align:center;background:#ea580c;color:#fff;font-weight:900;font-size:15px;border:none;border-radius:10px;padding:10px;cursor:pointer;font-family:inherit}
@@ -127,7 +128,7 @@ function searchHtml(){const f=S.form;return ''+
  '<div class="btns"><button class="btn" type="submit"'+(S.busy?' disabled':'')+'>SEARCH</button><button class="clr" type="button" id="clearBtn">CLEAR</button></div>'+
  (S.error?'<div class="err">'+esc(S.error)+'</div>':'')+
  '<div class="hint">At least 3 letters of the last name and 2 of the first.</div></form>'+
- '<div class="note">Public court records from the Pennsylvania Unified Judicial System. Records can be late or incomplete — always check the full docket.</div>'+
+ '<div class="skey"><div class="skh">STATUS</div><div><b>Active</b> = Open Case</div><div><b>Inactive</b> = Warrant</div><div><b>Closed</b> = Closed</div><div><b>Adjudicated</b> = ARD or Diversionary Program</div></div>'+
  '<div class="shwrap"><button class="share" type="button" id="shareBtn">SHARE THIS APP</button>'+(S.shareOpen?shareHtml():'')+'</div>'}
 function resultsHtml(){if(S.busy)return '<div class="wait"><div class="spin"></div>Searching the court records…<br><span style="font-weight:600">This can take 10–30 seconds.</span></div>';
  if(S.error)return '<div class="err">'+esc(S.error)+'</div>';const r=S.results;if(!r)return '';
